@@ -1,12 +1,24 @@
+export interface KeyValue {
+  key: string;
+  value: string;
+}
+
+// export interface Section {
+//   heading: string;
+//   fields: KeyValue[];
+// }
+
 export interface Product {
   id: string;
-  name: string;
-  description: string;
-  price: number;
-  imageUrl: string;
+  title: string;
   categoryId: string;
+  images: string[];
+  sizes: string[];
+  price: number;
+  specifications: KeyValue[];
+  description: string;
+  brand: string;
   stock: number;
-  rating: number;
 }
 
 export interface PaginatedProducts {
