@@ -24,8 +24,8 @@ export default function ProductCard({ product }: ProductCardProps) {
       onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}
     >
       <img
-        src={product.imageUrl || 'https://placehold.co/400x400?text=No+Image'}
-        alt={product.name}
+        src={product.images[0] || 'https://placehold.co/400x400?text=No+Image'}
+        alt={product.title}
         style={{ width: '100%', height: '260px', objectFit: 'cover' }}
       />
       <div style={{ padding: '14px' }}>
@@ -33,15 +33,13 @@ export default function ProductCard({ product }: ProductCardProps) {
           {product.categoryId}
         </p>
         <h3 style={{ fontSize: '15px', fontWeight: '600', margin: '0 0 8px' }}>
-          {product.name}
+          {product.title}
         </h3>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: '15px', fontWeight: '700' }}>
             ₹{product.price.toLocaleString()}
           </span>
-          <span style={{ fontSize: '13px', color: '#888' }}>
-            ★ {product.rating.toFixed(1)}
-          </span>
+          
         </div>
         <p style={{ fontSize: '12px', color: product.stock > 0 ? '#22c55e' : '#ef4444', margin: '6px 0 0' }}>
           {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
