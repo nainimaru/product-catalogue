@@ -9,8 +9,8 @@ export default function Navbar() {
       backgroundColor: '#fff',
       boxSizing: 'border-box',
     }}>
-      <span style={{ fontSize: '20px', fontWeight: '600', letterSpacing: '2px' }}>
-        CATALOGUE
+      <span style={{ fontSize: '20px', fontWeight: '600', letterSpacing: '1px' }}>
+        ADMIN CONTROL
       </span>
     </nav>
   );
