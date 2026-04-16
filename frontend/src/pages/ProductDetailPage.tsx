@@ -1,16 +1,31 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { MOCK_PRODUCTS, MOCK_CATEGORIES } from '../api/mockData';
-import { useState } from 'react';
+import { getProductById } from '../api/products';
+import { useFetch } from '../hooks/useFetch';
+import type { Product } from '../types/product';
+import { useState, useEffect } from 'react';
 
 export default function ProductDetailPage() {
   
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const product = MOCK_PRODUCTS.find(p => p.id === id);
-  const category = MOCK_CATEGORIES.find(c => c.id === product?.categoryId);
-  const [selectedImage, setSelectedImage] = useState(product?.images[0]);
-  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const { data: product, loading, error } = useFetch<Product>(() =>
+    getProductById(id!)
+  );
+  const [selectedImage, setSelectedImage] = useState<string>('');
+  useEffect(() => {
+    if (product) {
+        setSelectedImage(product.images[0]);
+    }
+  }, [product]);
+  
+  if (loading) {
+    return <div style={{ padding: '40px' }}>Loading...</div>;
+  }
+
+  if (error) {
+    return <div style={{ padding: '40px' }}>{error}</div>;
+  }
 
   if (!product) {
     return <div style={{ padding: '40px' }}>Product not found</div>;
@@ -138,38 +153,40 @@ export default function ProductDetailPage() {
             inclusive of all taxes
           </p>
 
-          {/* SIZE */}
-          {product.sizes.length > 0 && (
+          {/* TAGS */}
+            {product.tags.length > 0 && (
             <div style={{ marginBottom: '20px' }}>
-              <h3 style={{
-                fontSize: '13px',
-                fontWeight: '600',
-                marginBottom: '10px'
-              }}>
-                SELECT SIZE
-              </h3>
+                {product.tags.map((tag, index) => (
+                <div key={index} style={{ marginBottom: '12px' }}>
+                    
+                    <h3 style={{
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    marginBottom: '6px'
+                    }}>
+                    {tag.key.toUpperCase()}
+                    </h3>
 
-              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                {product.sizes.map(size => (
-                  <button
-                    key={size}
-                    onClick={() => setSelectedSize(size)}
-                    style={{
-                      width: '42px',
-                      height: '42px',
-                      borderRadius: '50%',
-                      border: selectedSize === size ? '2px solid #000' : '1px solid #ccc',
-                      backgroundColor: '#fff',
-                      cursor: 'pointer',
-                      fontWeight: '600'
-                    }}
-                  >
-                    {size}
-                  </button>
+                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                    {tag.value.split(',').map((val, i) => (
+                        <span
+                        key={i}
+                        style={{
+                            padding: '6px 12px',
+                            border: '1px solid #ccc',
+                            borderRadius: '20px',
+                            fontSize: '12px'
+                        }}
+                        >
+                        {val}
+                        </span>
+                    ))}
+                    </div>
+
+                </div>
                 ))}
-              </div>
             </div>
-          )}
+            )}
 
           {/* STOCK */}
           <p style={{
