@@ -13,7 +13,7 @@ export interface Product {
   title: string;
   categoryId: string;
   images: string[];
-  sizes: string[];
+  tags: KeyValue[];
   price: number;
   specifications: KeyValue[];
   description: string;

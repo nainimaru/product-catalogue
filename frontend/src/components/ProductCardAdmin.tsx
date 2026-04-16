@@ -1,36 +1,60 @@
 import type { Product } from '../types/product';
-import { useNavigate } from 'react-router-dom';
+import type { Category } from '../types/category';
 
-interface ProductCardProps {
+interface ProductCardAdminProps {
   product: Product;
-  categoryName?: string;
+  category: Category | undefined;
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
-export default function ProductCard({ product, categoryName }: ProductCardProps) {
-  const navigate = useNavigate();
-
+export default function ProductCardAdmin({ product, category, onEdit, onDelete }: ProductCardAdminProps) {
   return (
     <div
-      onClick={() => navigate(`/products/${product.id}`)}
       style={{
         border: '1px solid #e5e5e5',
         borderRadius: '12px',
         overflow: 'hidden',
-        cursor: 'pointer',
         backgroundColor: '#fff',
+        position: 'relative',
         transition: 'transform 0.2s',
       }}
       onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-4px)')}
       onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}
     >
+      {/* Action buttons */}
+      <div style={{
+        position: 'absolute',
+        top: '10px',
+        right: '10px',
+        display: 'flex',
+        gap: '6px',
+        zIndex: 10,
+      }}>
+        <button
+          onClick={e => { e.stopPropagation(); onEdit(product.id); }}
+          style={btnStyle}
+        >
+          ✏️
+        </button>
+
+        <button
+          onClick={e => { e.stopPropagation(); onDelete(product.id); }}
+          style={btnStyle}
+        >
+          🗑️
+        </button>
+      </div>
+
+      {/* Image */}
       <img
         src={product.images[0] || 'https://placehold.co/400x400?text=No+Image'}
         alt={product.title}
         style={{ width: '100%', height: '220px', objectFit: 'cover' }}
       />
 
+      {/* Content */}
       <div style={{ padding: '12px 14px' }}>
-        {/* Category */}
         <p style={{
           fontSize: '11px',
           color: '#aaa',
@@ -38,20 +62,17 @@ export default function ProductCard({ product, categoryName }: ProductCardProps)
           textTransform: 'uppercase',
           marginBottom: '4px'
         }}>
-          {categoryName || 'Category'}
+          {category?.name}
         </p>
 
-        {/* Title */}
         <h3 style={{
           fontSize: '14px',
           fontWeight: '600',
-          marginBottom: '6px',
-          lineHeight: '1.3'
+          marginBottom: '6px'
         }}>
           {product.title}
         </h3>
 
-        {/* Price */}
         <p style={{
           fontSize: '14px',
           fontWeight: '700',
@@ -60,7 +81,6 @@ export default function ProductCard({ product, categoryName }: ProductCardProps)
           ₹{product.price.toLocaleString()}
         </p>
 
-        {/* Stock */}
         <p style={{
           fontSize: '12px',
           color: product.stock > 0 ? '#16a34a' : '#dc2626'
@@ -71,3 +91,17 @@ export default function ProductCard({ product, categoryName }: ProductCardProps)
     </div>
   );
 }
+
+const btnStyle = {
+  width: '32px',
+  height: '32px',
+  borderRadius: '50%',
+  border: 'none',
+  backgroundColor: '#fff',
+  boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+  cursor: 'pointer',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontSize: '14px',
+};
