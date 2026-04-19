@@ -5,15 +5,18 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"net/http"
 
-	"github.com/gofiber/fiber/v2"
+    "github.com/go-chi/chi/v5"
+    "github.com/go-chi/chi/v5/middleware"
 	"github.com/joho/godotenv"
 	"github.com/nainimaru/product-catalogue/internals/handlers"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var collection *mongo.Collection
+var productCollection *mongo.Collection
+var categoryCollection *mongo.Collection
 
 func main() {
 	fmt.Println("Product Catalogue")
@@ -51,12 +54,18 @@ func main() {
 	//message on terminal that mongoDB is connected
 	fmt.Println("connected to mongoDB")
 
-	collection = client.Database("product_catalogue").Collection("products")
-	handlers.InitCollection(collection)
-	app := fiber.New()
+	productCollection = client.Database("product_catalogue").Collection("products")
+	categoryCollection = client.Database("product_catalogue").Collection("categories")
 
-	app.Get("/products", handlers.GetProducts)
-	app.Post("/products", handlers.AddProduct)
+	handlers.InitCollection(productCollection, categoryCollection)
 
-	log.Fatal(app.Listen(":5000"))
+	app := chi.NewRouter()
+	app.Use(middleware.Logger)
+    app.Get("/products", handlers.GetProducts)
+    app.Post("/products", handlers.AddProduct)
+	app.Delete("/products/{id}", handlers.DeleteProduct)
+	app.Patch("/products/{id}", handlers.EditProduct)
+	app.Get("/products/{id}",handlers.GetProductByID)
+
+    http.ListenAndServe(":5000", app)
 }
