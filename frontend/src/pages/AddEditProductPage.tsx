@@ -51,14 +51,15 @@ export default function AddEditProductPage() {
 
         if (isEdit && id) {
           const product = await getProductById(id);
+          const category = cats.find(c => c.id === product.categoryId);
           setForm({
             title: product.title,
             description: product.description,
             brand: product.brand,
             price: product.price.toString(),
             stock: product.stock.toString(),
-            categoryName: '',
-            categoryGender: 'men',
+            categoryName: category?.name || '',
+            categoryGender: category?.gender || 'men',
             images: product.images.join(', '),
             specifications: product.specifications.length > 0 ? product.specifications : [{ key: '', value: '' }],
             tags: product.tags.length > 0 ? product.tags : [{ key: '', value: '' }],
