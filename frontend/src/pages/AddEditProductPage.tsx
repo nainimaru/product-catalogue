@@ -65,7 +65,8 @@ export default function AddEditProductPage() {
             tags: product.tags.length > 0 ? product.tags : [{ key: '', value: '' }],
           });
         }
-      } catch {
+      } catch(err) {
+        console.error(err);
         setError('Failed to load data.');
       } finally {
         setLoading(false);

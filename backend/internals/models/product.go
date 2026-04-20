@@ -8,16 +8,16 @@ type KeyValue struct {
 }
 
 type Product struct {
-	ID          primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
-	Title       string             `json:"title" bson:"title"`
-	CategoryID  primitive.ObjectID `json:"categoryId" bson:"categoryId"`
-	Images      []string           `json:"images" bson:"images"`
-	Price       int                `json:"price" bson:"price"`
-	Tags        []KeyValue         `json:"tags" bson:"tags"`
-	Specs       []KeyValue        `json:"specs" bson:"specs"`
-	Description string             `json:"description" bson:"description"`
-	Brand       string             `json:"brand" bson:"brand"`
-	Stock       int                `json:"stock" bson:"stock"`
+	ID             primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
+	Title          string             `json:"title" bson:"title"`
+	CategoryID     primitive.ObjectID `json:"categoryId" bson:"categoryId"`
+	Images         []string           `json:"images" bson:"images"`
+	Price          int                `json:"price" bson:"price"`
+	Tags           []KeyValue         `json:"tags" bson:"tags"`
+	Specifications []KeyValue         `json:"specifications" bson:"specifications"`
+	Description    string             `json:"description" bson:"description"`
+	Brand          string             `json:"brand" bson:"brand"`
+	Stock          int                `json:"stock" bson:"stock"`
 }
 
 //example of product
@@ -28,7 +28,7 @@ type Product struct {
 // "price": 2999,
 // "tags":[{"key":"Color", "value":"Light Brown"}, {"key":"Size", "value":"XIA"}],
 // "highlights":[{"key":"outer material", "value":"Leather"}, {"key":"Occasion","value":"Formal"},{"key":"Type for formal", "value":"No lace"}],
-// "specs":[{"key":"Brand", "value":"Bata"},{ "key":"Brand Color", "value":"Light Brown"}, {"key":"Shoe Type", "value":"Walking Shoes, Corporate Casuals"}],
+// "specifications":[{"key":"Brand", "value":"Bata"},{ "key":"Brand Color", "value":"Light Brown"}, {"key":"Shoe Type", "value":"Walking Shoes, Corporate Casuals"}],
 // "Description":"Bata provides one of the best quality police shoes in the industry and all shoes are made in pure and original leather. Leather's natural breathability allows for proper ventilation, Leather Shoes offer insulation in cold weather while allowing heat dissipation in warmer conditions, maintaining optimal foot temperature.",
 // "stock":"70"
 // }

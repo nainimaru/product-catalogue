@@ -26,25 +26,25 @@ export interface ProductPayload {
 }
 
 export const getProduct= async (filters: ProductFilters= {}) : Promise<PaginatedProducts> => {
-    const res= await client.get<PaginatedProducts>(`/api/products`, {params: filters});
+    const res= await client.get<PaginatedProducts>(`/products`, {params: filters});
     return res.data;
 };
 
 export const getProductById= async (id : string): Promise<Product> => {
-    const res= await client.get<Product>(`/api/products/${id}`);
+    const res= await client.get<Product>(`/products/${id}`);
     return res.data;
 };
 
 export const createProduct= async (data: ProductPayload): Promise<Product> => {
-    const res= await client.post<Product>(`/api/products`, data);
+    const res= await client.post<Product>(`/products`, data);
     return res.data;
 };
 
 export const updateProduct= async (id: string, data: ProductPayload) : Promise<Product> => {
-    const res= await client.put<Product>(`/api/products/${id}`, data);
+    const res= await client.put<Product>(`/products/${id}`, data);
     return res.data;
 };
 
 export const deleteProduct= async (id: string): Promise<void> => {
-    await client.delete(`/api/products/${id}`);
+    await client.delete(`/products/${id}`);
 };

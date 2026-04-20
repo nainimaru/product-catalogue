@@ -30,7 +30,7 @@ export default function AdminDashboardPage() {
   const [gender, setGender] = useState<Gender>('men');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  const products = productsData?.data || [];
+    const products = productsData?.data || [];
   
   const loading = productsLoading || categoriesLoading;
   const error = productsError || categoriesError;
