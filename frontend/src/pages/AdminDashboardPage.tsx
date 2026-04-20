@@ -30,6 +30,8 @@ export default function AdminDashboardPage() {
   const [gender, setGender] = useState<Gender>('men');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | ''>('');
     const products = productsData?.data || [];
   
   const loading = productsLoading || categoriesLoading;
@@ -54,16 +56,34 @@ export default function AdminDashboardPage() {
     categories.filter(c => c.gender === gender).map(c => c.id),
     [categories, gender]
   );
+  const visibleCategories = useMemo(() => {
+    return categories.filter(c => c.gender === gender);
+  }, [categories, gender]);
 
   const filtered = useMemo(() => {
     let result = products.filter(p => genderCatIds.includes(p.categoryId));
-    if (search.trim()) {
-      result = result.filter(p =>
-        p.title.toLowerCase().includes(search.toLowerCase())
-      );
+
+    // 🔹 Category filter
+    if (selectedCategory !== 'all') {
+        result = result.filter(p => p.categoryId === selectedCategory);
     }
+
+    // 🔹 Search filter
+    if (search.trim()) {
+        result = result.filter(p =>
+        p.title.toLowerCase().includes(search.toLowerCase())
+        );
+    }
+
+    // 🔹 Sorting
+    if (sortOrder === 'asc') {
+        result = [...result].sort((a, b) => a.price - b.price);
+    } else if (sortOrder === 'desc') {
+        result = [...result].sort((a, b) => b.price - a.price);
+    }
+
     return result;
-  }, [products, genderCatIds, search]);
+  }, [products, genderCatIds, search, selectedCategory, sortOrder]);
 
   const totalPages = Math.ceil(filtered.length / PRODUCTS_PER_PAGE);
   const paginated = filtered.slice(
@@ -74,6 +94,7 @@ export default function AdminDashboardPage() {
   const handleGenderChange = (g: Gender) => {
     setGender(g);
     setPage(1);
+    setSelectedCategory('all');
   };
 
   return (
@@ -140,6 +161,77 @@ export default function AdminDashboardPage() {
           </button>
         ))}
       </div>
+
+      {/* Category Filter */}
+    <div style={{
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    padding: '12px 32px',
+    borderBottom: '1px solid #eee',
+    flexWrap: 'wrap'
+    }}>
+    <span style={{ fontSize: '12px', color: '#888', letterSpacing: '1px' }}>
+        FILTER
+    </span>
+
+    {/* All button */}
+    <button
+        onClick={() => setSelectedCategory('all')}
+        style={{
+        padding: '6px 14px',
+        borderRadius: '20px',
+        border: 'none',
+        backgroundColor: selectedCategory === 'all' ? '#000' : '#f5f5f5',
+        color: selectedCategory === 'all' ? '#fff' : '#333',
+        cursor: 'pointer',
+        fontSize: '13px'
+        }}
+    >
+        All
+    </button>
+
+    {/* Dynamic categories */}
+    {visibleCategories.map(cat => (
+        <button
+        key={cat.id}
+        onClick={() => setSelectedCategory(cat.id)}
+        style={{
+            padding: '6px 14px',
+            borderRadius: '20px',
+            border: 'none',
+            backgroundColor: selectedCategory === cat.id ? '#000' : '#f5f5f5',
+            color: selectedCategory === cat.id ? '#fff' : '#333',
+            cursor: 'pointer',
+            fontSize: '13px'
+        }}
+        >
+        {cat.name}
+        </button>
+    ))}
+    </div>
+
+    {/* Sort */}
+    <div style={{
+    padding: '12px 32px',
+    display: 'flex',
+    justifyContent: 'flex-end'
+    }}>
+    <select
+        value={sortOrder}
+        onChange={(e) => setSortOrder(e.target.value as any)}
+        style={{
+        padding: '8px 12px',
+        borderRadius: '8px',
+        border: '1px solid #ddd',
+        fontSize: '13px'
+        }}
+    >
+        <option value="">Sort by</option>
+        <option value="asc">Price: Low to High</option>
+        <option value="desc">Price: High to Low</option>
+    </select>
+    </div>
 
       {/* Results count */}
       <div style={{ padding: '12px 32px', fontSize: '13px', color: '#888' }}>
