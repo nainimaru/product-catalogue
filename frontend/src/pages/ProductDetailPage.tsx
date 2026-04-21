@@ -2,7 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getProductById } from '../api/products';
 import { useFetch } from '../hooks/useFetch';
 import type { Product } from '../types/product';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 export default function ProductDetailPage() {
   
@@ -12,12 +12,8 @@ export default function ProductDetailPage() {
   const { data: product, loading, error } = useFetch<Product>(() =>
     getProductById(id!)
   );
-  const [selectedImage, setSelectedImage] = useState<string>('');
-  useEffect(() => {
-    if (product) {
-        setSelectedImage(product.images[0]);
-    }
-  }, [product]);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const selectedImage = product?.images[selectedImageIndex] ?? '';
   
   if (loading) {
     return <div style={{ padding: '40px' }}>Loading...</div>;
@@ -93,14 +89,14 @@ export default function ProductDetailPage() {
                 key={index}
                 src={img}
                 alt="thumb"
-                onClick={() => setSelectedImage(img)}
+                onClick={() => setSelectedImageIndex(index)}
                 style={{
                 width: '70px',
                 height: '70px',
                 objectFit: 'cover',
                 borderRadius: '8px',
                 cursor: 'pointer',
-                border: selectedImage === img
+                border: selectedImageIndex === index
                     ? '2px solid #000'
                     : '1px solid #ddd'
                 }}

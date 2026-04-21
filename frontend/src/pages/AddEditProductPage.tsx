@@ -23,7 +23,7 @@ export default function AddEditProductPage() {
   const navigate = useNavigate();
   const isEdit = Boolean(id);
 
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
