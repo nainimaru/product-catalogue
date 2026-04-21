@@ -8,6 +8,7 @@ export interface ProductFilters {
     search?: string;
     sortBy?: string;
     order?: 'asc' | 'desc';
+    gender?: string;
 }
 
 export interface ProductPayload {
@@ -41,7 +42,7 @@ export const createProduct= async (data: ProductPayload): Promise<Product> => {
 };
 
 export const updateProduct= async (id: string, data: ProductPayload) : Promise<Product> => {
-    const res= await client.put<Product>(`/products/${id}`, data);
+    const res= await client.patch<Product>(`/products/${id}`, data);
     return res.data;
 };
 

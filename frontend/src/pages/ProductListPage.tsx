@@ -1,11 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useFetch } from '../hooks/useFetch';
 import { useNavigate } from 'react-router-dom';
 import { getProduct } from '../api/products';
 import { getCategories } from '../api/categories';
-import type { Product } from '../types/product';
-import type { Category } from '../types/category';
 import ProductCard from '../components/ProductCard';
+import { useSearchParams } from 'react-router-dom';
+
 
 const PRODUCTS_PER_PAGE = 6;
 type Gender = 'men' | 'women' | 'kids';
@@ -14,73 +14,63 @@ export default function ProductListPage() {
   const navigate = useNavigate();
 
   const {
-    data: productsData,
-    loading: productsLoading,
-    error: productsError,
-  } = useFetch(() => getProduct());
-
-  const {
     data: categoriesData,
     loading: categoriesLoading,
     error: categoriesError,
   } = useFetch(() => getCategories());
 
-  const categories: Category[] = categoriesData || [];
-  const products: Product[] = productsData?.data || [];
+  const categories = useMemo(() => categoriesData || [], [categoriesData]);
 
-  const [gender, setGender] = useState<Gender>('men');
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | ''>('');
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const updateParams = (newParams: Record<string, string>) => {
+    const params = new URLSearchParams(searchParams);
+
+    Object.entries(newParams).forEach(([key, value]) => {
+      if (value) params.set(key, value);
+      else params.delete(key);
+    });
+
+    setSearchParams(params);
+  };
+  
+  const page = Number(searchParams.get('page')) || 1;
+  const gender = (searchParams.get('gender') as Gender) || 'men';
+  const search = searchParams.get('search') || '';
+  const selectedCategory = searchParams.get('category') || 'all';
+  const sortOrder = (searchParams.get('order') as 'asc' | 'desc' | '') || '';
+
+  const {
+    data: productsData,
+    loading: productsLoading,
+    error: productsError,
+  } =useFetch(() =>getProduct({
+      page,
+      limit: PRODUCTS_PER_PAGE,
+      category: selectedCategory !== 'all' ? selectedCategory : undefined,
+      search,
+      sortBy: 'price',
+      order: sortOrder || undefined,
+      gender,
+    }),
+    [page, selectedCategory, search, sortOrder, gender]
+  );
+
+  const products = productsData?.data || [];
   const loading = productsLoading || categoriesLoading;
   const error = productsError || categoriesError;
-
-  const genderCatIds = useMemo(
-    () => categories.filter(c => c.gender === gender).map(c => c.id),
-    [categories, gender]
-  );
   const visibleCategories = useMemo(() => {
     return categories.filter(c => c.gender === gender);
   }, [categories, gender]);
 
-  const filtered = useMemo(() => {
-    let result = products.filter(p => genderCatIds.includes(p.categoryId));
-
-    // 🔹 Category filter
-    if (selectedCategory !== 'all') {
-        result = result.filter(p => p.categoryId === selectedCategory);
-    }
-
-    // 🔹 Search filter
-    if (search.trim()) {
-        result = result.filter(p =>
-        p.title.toLowerCase().includes(search.toLowerCase())
-        );
-    }
-
-    // 🔹 Sorting
-    if (sortOrder === 'asc') {
-        result = [...result].sort((a, b) => a.price - b.price);
-    } else if (sortOrder === 'desc') {
-        result = [...result].sort((a, b) => b.price - a.price);
-    }
-
-    return result;
-  }, [products, genderCatIds, search, selectedCategory, sortOrder]);
-
-  const totalPages = Math.ceil(filtered.length / PRODUCTS_PER_PAGE);
-
-  const paginated = filtered.slice(
-    (page - 1) * PRODUCTS_PER_PAGE,
-    page * PRODUCTS_PER_PAGE
-  );
+  const totalPages = Math.ceil((productsData?.total || 0) / PRODUCTS_PER_PAGE);
 
   const handleGenderChange = (g: Gender) => {
-    setGender(g);
-    setPage(1);
-    setSelectedCategory('all');
+    updateParams({
+      gender: g,
+      category: 'all',
+      page: '1',
+    });
   };
 
   return (
@@ -107,8 +97,10 @@ export default function ProductListPage() {
           placeholder="Search products..."
           value={search}
           onChange={e => {
-            setSearch(e.target.value);
-            setPage(1);
+            updateParams({
+              search: e.target.value,
+              page: '1',
+            });
           }}
           style={{
             width: '240px',
@@ -163,7 +155,10 @@ export default function ProductListPage() {
 
     {/* All button */}
     <button
-        onClick={() => setSelectedCategory('all')}
+        onClick={() => updateParams({
+          category: 'all',
+          page: '1',
+        })}
         style={{
         padding: '6px 14px',
         borderRadius: '20px',
@@ -181,7 +176,10 @@ export default function ProductListPage() {
     {visibleCategories.map(cat => (
         <button
         key={cat.id}
-        onClick={() => setSelectedCategory(cat.id)}
+        onClick={() => updateParams({
+          category: cat.id,
+          page: '1',
+        })}
         style={{
             padding: '6px 14px',
             borderRadius: '20px',
@@ -205,7 +203,10 @@ export default function ProductListPage() {
     }}>
     <select
         value={sortOrder}
-        onChange={(e) => setSortOrder(e.target.value as any)}
+        onChange={(e) => updateParams({
+          order: e.target.value,
+          page: '1',
+        })}
         style={{
         padding: '8px 12px',
         borderRadius: '8px',
@@ -221,7 +222,7 @@ export default function ProductListPage() {
 
       {/* Results count */}
       <div style={{ padding: '12px 32px', fontSize: '13px', color: '#888' }}>
-        {loading ? 'Loading...' : `${filtered.length} products found`}
+        {loading ? 'Loading...' : `${productsData?.total || 0} products found`}
       </div>
 
       {/* Error */}
@@ -245,7 +246,7 @@ export default function ProductListPage() {
           <div style={{ textAlign: 'center', padding: '80px', color: '#aaa' }}>
             <p style={{ fontSize: '16px' }}>Loading products...</p>
           </div>
-        ) : paginated.length === 0 ? (
+        ) : products.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '80px', color: '#888' }}>
             <p style={{ fontSize: '18px' }}>No products found</p>
           </div>
@@ -255,7 +256,7 @@ export default function ProductListPage() {
             gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
             gap: '20px',
           }}>
-            {paginated.map(product => {
+            {products.map(product => {
               const category = categories.find(c => c.id === product.categoryId);
 
               return (
@@ -281,7 +282,9 @@ export default function ProductListPage() {
           borderTop: '1px solid #e5e5e5',
         }}>
           <button
-            onClick={() => setPage(p => p - 1)}
+            onClick={() => updateParams({
+              page: String(page - 1),
+            })}
             disabled={page === 1}
             style={{
               padding: '8px 20px',
@@ -301,7 +304,9 @@ export default function ProductListPage() {
           </span>
 
           <button
-            onClick={() => setPage(p => p + 1)}
+            onClick={() => updateParams({
+              page: String(page + 1),
+            })}
             disabled={page === totalPages}
             style={{
               padding: '8px 20px',

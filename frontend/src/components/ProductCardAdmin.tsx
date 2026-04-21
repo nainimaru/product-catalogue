@@ -1,5 +1,6 @@
 import type { Product } from '../types/product';
 import type { Category } from '../types/category';
+import { useNavigate } from 'react-router-dom';
 
 interface ProductCardAdminProps {
   product: Product;
@@ -9,8 +10,10 @@ interface ProductCardAdminProps {
 }
 
 export default function ProductCardAdmin({ product, category, onEdit, onDelete }: ProductCardAdminProps) {
+  const navigate=useNavigate();
   return (
     <div
+      onClick={() => navigate(`/products/${product.id}`)}
       style={{
         border: '1px solid #e5e5e5',
         borderRadius: '12px',
@@ -18,6 +21,7 @@ export default function ProductCardAdmin({ product, category, onEdit, onDelete }
         backgroundColor: '#fff',
         position: 'relative',
         transition: 'transform 0.2s',
+        cursor: 'pointer',
       }}
       onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-4px)')}
       onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}

@@ -3,9 +3,9 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
-    "fmt"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/nainimaru/product-catalogue/internals/models"
@@ -23,30 +23,106 @@ func InitCollection(prodCol *mongo.Collection, catCol *mongo.Collection) {
 }
 
 func GetProducts(w http.ResponseWriter, r *http.Request) {
-	var products []models.Product
 
-	cursor, err := productCollection.Find(context.Background(), bson.M{})
+	// query params
+	page := 1
+	limit := 6
+
+	if p := r.URL.Query().Get("page"); p != "" {
+		fmt.Sscanf(p, "%d", &page)
+	}
+	if l := r.URL.Query().Get("limit"); l != "" {
+		fmt.Sscanf(l, "%d", &limit)
+	}
+
+	skip := (page - 1) * limit
+
+	// filters
+	filter := bson.M{}
+
+	var categoryIDs []primitive.ObjectID
+
+	// 1. if gender exists → get all category IDs of that gender
+	if gender := r.URL.Query().Get("gender"); gender != "" {
+		ctx := r.Context()
+		cursor, _ := categoryCollection.Find(ctx, bson.M{"gender": gender})
+
+		for cursor.Next(ctx) {
+			var c models.Category
+			cursor.Decode(&c)
+			categoryIDs = append(categoryIDs, c.ID)
+		}
+	}
+
+	// 2. if specific category selected → override to only that
+	if category := r.URL.Query().Get("category"); category != "" {
+		catID, err := primitive.ObjectIDFromHex(category)
+		if err == nil {
+			categoryIDs = []primitive.ObjectID{catID}
+		}
+	}
+
+	// 3. apply filter only if we have something
+	if len(categoryIDs) > 0 {
+		filter["categoryId"] = bson.M{"$in": categoryIDs}
+	}
+
+	if search := r.URL.Query().Get("search"); search != "" {
+		filter["title"] = bson.M{
+			"$regex":   search,
+			"$options": "i",
+		}
+	}
+
+	// sorting
+	sort := bson.D{}
+	if sortBy := r.URL.Query().Get("sortBy"); sortBy != "" {
+		order := 1
+		if r.URL.Query().Get("order") == "desc" {
+			order = -1
+		}
+		sort = append(sort, bson.E{Key: sortBy, Value: order})
+	}
+
+	// count total
+	total, err := productCollection.CountDocuments(context.Background(), filter)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	// find with pagination
+	opts := options.Find().
+		SetSkip(int64(skip)).
+		SetLimit(int64(limit)).
+		SetSort(sort)
+
+	cursor, err := productCollection.Find(context.Background(), filter, opts)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	defer cursor.Close(context.Background())
 
+	var products []models.Product
 	for cursor.Next(context.Background()) {
 		var product models.Product
-
 		if err := cursor.Decode(&product); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-
 		products = append(products, product)
 	}
 
+	response := map[string]interface{}{
+		"data":  products,
+		"total": total,
+		"page":  page,
+		"limit": limit,
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(products)
+	json.NewEncoder(w).Encode(response)
 }
 
 type CategoryInput struct {
