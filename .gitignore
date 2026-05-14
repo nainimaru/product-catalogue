@@ -1,6 +1,6 @@
 # Go
 backend/bin/
-backend/*.exe
+backend/**/*.exe
 
 # Node
 frontend/node_modules/
@@ -9,6 +9,7 @@ frontend/.env
 
 # Environment files
 .env
+backend/.env
 *.env.local
 
 # OS

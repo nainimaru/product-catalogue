@@ -1,88 +1,47 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
-	"os"
 	"net/http"
+	"os"
 
-    "github.com/go-chi/chi/v5"
-    "github.com/go-chi/chi/v5/middleware"
 	"github.com/joho/godotenv"
-	"github.com/nainimaru/product-catalogue/internals/handlers"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"github.com/nainimaru/product-catalogue/internal/app"
+	"github.com/nainimaru/product-catalogue/internal/middleware"
 )
 
-var productCollection *mongo.Collection
-var categoryCollection *mongo.Collection
-
-func enableCORS(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-
-		if r.Method == "OPTIONS" {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	})
-}
-
-
 func main() {
-	fmt.Println("Product Catalogue")
+	// Load environment variables from .env file
+	// Try multiple paths so it works whether you run from backend/ or backend/cmd/server/
+	_ = godotenv.Load()          // looks in current directory
+	_ = godotenv.Load("../../.env") // looks in backend/ when running from cmd/server/
 
-	//Loading environment variables
-	err := godotenv.Load(".env")
-
-	//if Loading fails then terminate the execution
+	// Create the application — this wires up DB, repositories, services, and handlers
+	application, err := app.NewApplication()
 	if err != nil {
-		log.Fatal("error while loading env vairables", err)
+		log.Fatalf("failed to initialize application: %v", err)
+	}
+	fmt.Println("connected to MongoDB")
+
+	// Set up routes
+	router := app.SetupRoutes(application)
+
+	// Determine allowed origin for CORS
+	allowedOrigin := os.Getenv("CORS_ORIGIN")
+	if allowedOrigin == "" {
+		allowedOrigin = "http://localhost:5173"
 	}
 
-	//os.Getenv loads environment variables, Loads MONGODB_URI if it exists
-	MONGODB_URI := os.Getenv("MONGODB_URI")
-
-	//creating mongoDB client configurations using MONGODB_URI(connection string)
-	clientOptions := options.Client().ApplyURI(MONGODB_URI)
-
-	//mongo.Connect tries to establish connection
-	client, err := mongo.Connect(context.Background(), clientOptions)
-
-	//if connection fails -> stop program
-	if err != nil {
-		log.Fatal(err)
+	// Determine port
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "5000"
 	}
 
-	//Ping confirms network is fine
-	err = client.Ping(context.Background(), nil)
-
-	//if ping fails stop program connection is useless
-	if err != nil {
-		log.Fatal("error when we ping DB", err)
+	// Start the server with CORS middleware wrapping the router
+	fmt.Printf("server starting on port %s\n", port)
+	if err := http.ListenAndServe(":"+port, middleware.CORS(allowedOrigin)(router)); err != nil {
+		log.Fatalf("server failed: %v", err)
 	}
-
-	//message on terminal that mongoDB is connected
-	fmt.Println("connected to mongoDB")
-
-	productCollection = client.Database("product_catalogue").Collection("products")
-	categoryCollection = client.Database("product_catalogue").Collection("categories")
-
-	handlers.InitCollection(productCollection, categoryCollection)
-
-	app := chi.NewRouter()
-	app.Use(middleware.Logger)
-    app.Get("/products", handlers.GetProducts)
-    app.Post("/products", handlers.AddProduct)
-	app.Delete("/products/{id}", handlers.DeleteProduct)
-	app.Patch("/products/{id}", handlers.EditProduct)
-	app.Get("/products/{id}",handlers.GetProductByID)
-	app.Get("/categories", handlers.GetCategories)
-
-    http.ListenAndServe(":5000", enableCORS(app))
 }
