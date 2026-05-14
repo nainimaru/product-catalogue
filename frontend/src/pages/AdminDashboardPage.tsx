@@ -52,7 +52,6 @@ export default function AdminDashboardPage() {
       gender,
     }),[page, search, selectedCategory, sortOrder, gender]
   );
-
   const products = productsData?.data || [];
   
   const loading = productsLoading || categoriesLoading;
