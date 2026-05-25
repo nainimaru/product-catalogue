@@ -27,6 +27,11 @@ func NewApplication() (*Application, error) {
 		return nil, fmt.Errorf("database connection failed: %w", err)
 	}
 
+	err = repository.CreateIndexes(mongoDB)
+	if err != nil {
+		return nil, err
+	}
+
 	// 2. Create repositories
 	productRepo := repository.NewProductRepository(mongoDB)
 	categoryRepo := repository.NewCategoryRepository(mongoDB)
