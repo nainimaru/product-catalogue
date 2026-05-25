@@ -9,6 +9,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/nainimaru/product-catalogue/internal/app"
 	"github.com/nainimaru/product-catalogue/internal/middleware"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
 func main() {
@@ -26,6 +27,15 @@ func main() {
 
 	// Set up routes
 	router := app.SetupRoutes(application)
+
+	router.Get("/swagger/doc.yaml", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/x-yaml")
+		http.ServeFile(w, r, "docs/swagger.yaml")
+	})
+
+	router.Get("/swagger/*", httpSwagger.Handler(
+		httpSwagger.URL("/swagger/doc.yaml"),
+	))
 
 	// Determine allowed origin for CORS
 	allowedOrigin := os.Getenv("CORS_ORIGIN")

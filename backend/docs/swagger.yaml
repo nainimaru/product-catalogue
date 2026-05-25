@@ -1,0 +1,218 @@
+openapi: 3.0.0
+
+info:
+  title: Product Catalogue API
+  version: 1.0.0
+  description: API documentation for Product Catalogue backend
+
+servers:
+  - url: http://localhost:5000
+
+paths:
+
+  /products:
+    get:
+      summary: Get products
+      description: Fetch paginated products with filtering and sorting
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+
+        - in: query
+          name: limit
+          schema:
+            type: integer
+
+        - in: query
+          name: gender
+          schema:
+            type: string
+
+        - in: query
+          name: category
+          schema:
+            type: string
+
+        - in: query
+          name: search
+          schema:
+            type: string
+
+        - in: query
+          name: sortBy
+          schema:
+            type: string
+
+        - in: query
+          name: order
+          schema:
+            type: string
+
+      responses:
+        '200':
+          description: Product list fetched successfully
+
+    post:
+      summary: Add product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductRequest'
+
+      responses:
+        '201':
+          description: Product created successfully
+
+  /products/{id}:
+    get:
+      summary: Get product by ID
+
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+
+      responses:
+        '200':
+          description: Product fetched successfully
+
+    patch:
+      summary: Update product
+
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditProductRequest'
+
+      responses:
+        '200':
+          description: Product updated successfully
+
+    delete:
+      summary: Delete product
+
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+
+      responses:
+        '204':
+          description: Product deleted successfully
+
+  /categories:
+    get:
+      summary: Get categories
+
+      responses:
+        '200':
+          description: Categories fetched successfully
+
+components:
+
+  schemas:
+
+    KeyValue:
+      type: object
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+
+    CategoryInput:
+      type: object
+      properties:
+        name:
+          type: string
+        gender:
+          type: string
+
+    ProductRequest:
+      type: object
+      properties:
+        title:
+          type: string
+
+        category:
+          $ref: '#/components/schemas/CategoryInput'
+
+        images:
+          type: array
+          items:
+            type: string
+
+        price:
+          type: integer
+
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/KeyValue'
+
+        specifications:
+          type: array
+          items:
+            $ref: '#/components/schemas/KeyValue'
+
+        description:
+          type: string
+
+        brand:
+          type: string
+
+        stock:
+          type: integer
+
+    EditProductRequest:
+      type: object
+      properties:
+        title:
+          type: string
+
+        category:
+          $ref: '#/components/schemas/CategoryInput'
+
+        images:
+          type: array
+          items:
+            type: string
+
+        price:
+          type: integer
+
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/KeyValue'
+
+        specifications:
+          type: array
+          items:
+            $ref: '#/components/schemas/KeyValue'
+
+        description:
+          type: string
+
+        brand:
+          type: string
+
+        stock:
+          type: integer
